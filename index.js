@@ -144,15 +144,23 @@ async function runAgent(userInput, messages) {
     const raw = resp.choices[0].message.content;
     let parsed;
     try {
+      // First try direct parse
       parsed = JSON.parse(raw);
     } catch {
-      console.log("⚠️  Model returned invalid JSON, asking it to retry.");
-      messages.push({ role: "assistant", content: raw });
-      messages.push({
-        role: "user",
-        content: "Your last response was not valid JSON. Reply with a single valid JSON object only.",
-      });
-      continue;
+      // Try extracting JSON object from surrounding text
+      const match = raw.match(/\{[\s\S]*\}/);
+      if (match) {
+        try { parsed = JSON.parse(match[0]); } catch { parsed = null; }
+      }
+      if (!parsed) {
+        console.log("⚠️  Model returned invalid JSON, asking it to retry.");
+        messages.push({ role: "assistant", content: raw });
+        messages.push({
+          role: "user",
+          content: "Your last response was not valid JSON. Reply with a single valid JSON object only.",
+        });
+        continue;
+      }
     }
 
     messages.push({ role: "assistant", content: JSON.stringify(parsed) });
