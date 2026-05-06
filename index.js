@@ -1,6 +1,6 @@
 import "dotenv/config";
 import axios from "axios";
-import { OpenAI } from "openai";
+import Groq from "groq-sdk";
 import { exec } from "child_process";
 import fs from "fs/promises";
 import path from "path";
@@ -137,8 +137,7 @@ async function runAgent(userInput, messages) {
 
   while (true) {
     const resp = await client.chat.completions.create({
-      model: "gpt-4.1-mini",
-      response_format: { type: "json_object" },
+      model: "llama-3.3-70b-versatile",
       messages,
     });
 
@@ -216,11 +215,11 @@ async function runAgent(userInput, messages) {
 }
 
 async function main() {
-  if (!process.env.OPENAI_API_KEY) {
-    console.error("Missing OPENAI_API_KEY. Copy .env.example to .env and fill it in.");
+  if (!process.env.GROQ_API_KEY) {
+    console.error("Missing GROQ_API_KEY. Copy .env.example to .env and fill it in.");
     process.exit(1);
   }
-  client = new OpenAI();
+  client = new Groq({ apiKey: process.env.GROQ_API_KEY });
 
   const messages = [{ role: "system", content: SYSTEM_PROMPT }];
 
